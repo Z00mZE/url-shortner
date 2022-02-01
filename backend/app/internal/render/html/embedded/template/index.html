@@ -25,33 +25,21 @@
     <div class="hero-body">
         <div class="container has-text-centered">
             <div class="box">
-                <form action="/link" method="post">
+                <form action="/" method="post">
                     <div class="field is-horizontal">
                         <div class="field-body">
                             <div class="field">
                                 <div class="control">
                                     <input class="input" name="url" type="text"
-                                           value=""
+                                           value="{{.userRawURL}}"
                                            placeholder="Please write url for shortening." autofocus="">
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="field is-horizontal">
-                        <div class="field-body">
-                            <div class="field is-expanded">
-                                <div class="field has-addons">
-                                    <p class="control">
-                                        <a class="button is-static">link active until</a>
-                                    </p>
-                                    <p class="control is-expanded">
-                                        <input type="date" name="ttl" value="2018-07-22" class="input" min="{{.minTTL}}"
-                                               max="{{.maxTTL}}">
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    {{if .errorOnSave }}
+                    <div class="notification is-warning">{{.errorOnSave}}</div>
+                    {{ end }}
                     <button class="button is-block is-info is-fullwidth is-rounded">Shortening me</button>
                 </form>
             </div>

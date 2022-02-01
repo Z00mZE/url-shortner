@@ -5,6 +5,7 @@ import (
 	"github.com/Z00mZE/url-shortner/config"
 	echoRouting "github.com/Z00mZE/url-shortner/internal/controller/echohttp"
 	"github.com/Z00mZE/url-shortner/pkg/httpserver"
+	"github.com/Z00mZE/url-shortner/pkg/postgres"
 	"github.com/Z00mZE/url-shortner/pkg/render"
 	"github.com/Z00mZE/url-shortner/usecase"
 	"github.com/labstack/echo/v4"
@@ -13,9 +14,26 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 func Run(cfg *config.AppConfig) {
+	fmt.Println("DSN: ", cfg.Database.DSN)
+	entOrm, entOrmError := postgres.NewEntPostgres(
+		cfg.Database.DSN,
+		postgres.MaxPoolSize(10),
+		postgres.SetConnMaxLifetime(time.Minute*15),
+		postgres.SetConnMaxIdleTime(time.Minute*5),
+	)
+	if entOrmError != nil {
+		log.Fatal(fmt.Errorf("app - Run - postgres.NewPostgresORM: %w", entOrmError))
+	}
+	defer func() {
+		if err := entOrm.Close(); err != nil {
+			log.Fatal(err)
+		}
+	}()
+
 	app := echo.New()
 	httpServer := httpserver.NewHTTPServer(app, httpserver.Port(cfg.HTTP.Port))
 	app.Use(

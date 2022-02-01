@@ -1,14 +1,14 @@
 version: '3.8'
 services:
-  db:
-    container_name: pg-url-shortner
+  db_shortner:
+    container_name: db_shortner
     image: postgres:alpine3.14
     restart: always
     environment:
-      PG_DB: ${PG_DB}
-      PG_USER: ${PG_USER}
-      PG_PASSWORD: ${PG_PASSWORD}
-      PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_DB: ${PG_DB}
+      POSTGRES_USER: ${PG_USER}
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata_shortner
     ports:
       - "5433:5432"
     volumes:
@@ -20,12 +20,12 @@ services:
 #      dockerfile: backend/app/Dockerfile
     environment:
       HTTP_PORT: 8000
-      DB_DSN: postgres://${PG_USER}:${PG_PASSWORD}@postgres:5433/${PG_DB}
+      DB_DSN: postgres://${PG_USER}:${PG_PASSWORD}@db_shortner:5432/${PG_DB}
     depends_on:
-      - db
+      - db_shortner
     ports:
       - "80:8000"
 volumes:
   us_pgdata:
-    name: pgdata
+    name: us_pgdata
     driver: local

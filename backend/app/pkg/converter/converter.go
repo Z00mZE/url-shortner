@@ -1,7 +1,6 @@
 package converter
 
 import (
-	"fmt"
 	"math"
 	"strings"
 )
@@ -12,7 +11,12 @@ type Converter struct {
 	reversAlphabetMap map[string]int64
 }
 
-func NewConverter(alphabet []byte) *Converter {
+const Base62Alphabet = "UwJHRu6IOmEvxlVjZTe8h9oLYi0PfkF5GbzsqAD7KNyX3ar41cd2QCtMpSWngB"
+
+func NewDefaultDecimalConverter() *Converter {
+	return NewDecimalConverter([]byte(Base62Alphabet))
+}
+func NewDecimalConverter(alphabet []byte) *Converter {
 	alphabetCapacity := len(alphabet)
 	alphabetMap := make(map[int64]string, alphabetCapacity)
 	reversAlphabetMap := make(map[string]int64, alphabetCapacity)
@@ -20,7 +24,6 @@ func NewConverter(alphabet []byte) *Converter {
 		idInt64, letter := int64(id), string(symbol)
 		alphabetMap[idInt64], reversAlphabetMap[letter] = letter, idInt64
 	}
-	fmt.Println("capacity", alphabetCapacity)
 	return &Converter{alphabetMap: alphabetMap, reversAlphabetMap: reversAlphabetMap, alphabetCapacity: int64(alphabetCapacity)}
 }
 func (c *Converter) Encode(n int64) string {

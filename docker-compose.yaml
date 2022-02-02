@@ -1,23 +1,27 @@
 version: '3.8'
 services:
-  db_shortner:
+  db:
+    #    имя/хост контейнера
     container_name: db_shortner
+    #    образ для создания
     image: postgres:alpine3.14
+    #    если контейнер упал - всегда перзапустить
     restart: always
+    #    настройки окружения для контейнера
     environment:
       POSTGRES_DB: ${PG_DB}
       POSTGRES_USER: ${PG_USER}
       POSTGRES_PASSWORD: ${PG_PASSWORD}
+      #      указываем где хранить данные БД, ниже есть описание, что это папка монтируется к папке родительской ОС
       PGDATA: /var/lib/postgresql/data/pgdata_shortner
     ports:
       - "5433:5432"
     volumes:
-      - us_pgdata:/var/lib/postgresql/data
-  backend:
-    container_name: backend-container
+      - shortner_pgdata:/var/lib/postgresql/data
+  application:
+    container_name: site
     build:
       context: ./backend/app
-#      dockerfile: backend/app/Dockerfile
     environment:
       HTTP_PORT: 8000
       DB_DSN: postgres://${PG_USER}:${PG_PASSWORD}@db_shortner:5432/${PG_DB}
@@ -26,6 +30,6 @@ services:
     ports:
       - "80:8000"
 volumes:
-  us_pgdata:
-    name: us_pgdata
+  shortner_pgdata:
+    name: shortner_pgdata
     driver: local

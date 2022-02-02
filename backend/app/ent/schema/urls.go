@@ -3,6 +3,7 @@ package schema
 import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/field"
+	"net/url"
 	"time"
 )
 
@@ -17,6 +18,12 @@ func (Urls) Fields() []ent.Field {
 		field.
 			String("url").
 			Unique().
+			Validate(func(s string) error {
+				if _, err := url.ParseRequestURI(s); err != nil {
+					return err
+				}
+				return nil
+			}).
 			NotEmpty(),
 		field.
 			Time("expired_at").

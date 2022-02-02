@@ -2,15 +2,18 @@ package app
 
 import (
 	"fmt"
+	"github.com/Z00mZE/url-shortner/assets"
 	"github.com/Z00mZE/url-shortner/config"
 	echoRouting "github.com/Z00mZE/url-shortner/internal/controller/echohttp"
+	"github.com/Z00mZE/url-shortner/internal/render/html/embedded"
+	"github.com/Z00mZE/url-shortner/pkg/converter"
 	"github.com/Z00mZE/url-shortner/pkg/httpserver"
 	"github.com/Z00mZE/url-shortner/pkg/postgres"
-	"github.com/Z00mZE/url-shortner/pkg/render"
 	"github.com/Z00mZE/url-shortner/usecase"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -39,9 +42,9 @@ func Run(cfg *config.AppConfig) {
 	app.Use(
 		middleware.Gzip(),
 	)
-	app.Renderer = render.NewTemplateRenderer("template/*.html")
+	app.Renderer = embedded.NewRenderer()
 	//	иницализация роутинга
-	shortner := &usecase.Shortner{}
+	shortner := usecase.NewShortner(entOrm.Urls, converter.NewDefaultDecimalConverter())
 	go initRoutes(app, shortner)
 
 	// Waiting signal
@@ -56,17 +59,21 @@ func Run(cfg *config.AppConfig) {
 			log.Panicln(shutdownError)
 		}
 	case err = <-httpServer.Notify():
-		log.Fatal(fmt.Errorf("app - Run - httpServer.Notify: %w", err))
+		log.Panic(fmt.Errorf("app - Run - httpServer.Notify: %w", err))
 	}
 
 	// Shutdown
 	if err = httpServer.Shutdown(); err != nil {
-		log.Fatal(fmt.Errorf("app - Run - httpServer.Shutdown: %w", err))
+		log.Panic(fmt.Errorf("app - Run - httpServer.Shutdown: %w", err))
 	}
 }
 
 func initRoutes(app *echo.Echo, shortner *usecase.Shortner) {
-	app.Static("/assets", "assets")
+	assetHandler, assetHandlerError := assets.NewAssetFileServer()
+	if assetHandlerError == nil {
+		app.GET("/assets/*", echo.WrapHandler(http.StripPrefix("/assets/", assetHandler)))
+	}
+
 	if bindRouteError := echoRouting.NewRouter(app, shortner); bindRouteError != nil {
 		app.Logger.Error(bindRouteError)
 	}

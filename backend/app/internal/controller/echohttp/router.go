@@ -3,6 +3,7 @@ package v1
 import (
 	"context"
 	"fmt"
+	"github.com/Z00mZE/url-shortner/ent"
 	"github.com/Z00mZE/url-shortner/pkg/routing"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -16,10 +17,15 @@ type UseCaseError interface {
 }
 
 type UseCase interface {
-	SaveLink(ctx context.Context, url url.URL) error
-	ViewLink(ctx context.Context, hash string)
-	Redirect(ctx context.Context, url string) error
+	SaveLink(context.Context, *url.URL) (ent.Urls, error)
+	ViewLink(context.Context, string) (ent.Urls, error)
+	Redirect(context.Context, string) (ent.Urls, error)
 }
+
+const (
+	formParamUserURL = "url"
+	onSaveError      = "errorOnSave"
+)
 
 func NewRouter(app *echo.Echo, useCases UseCase) error {
 	routing.BindHTTPRouteGroup(
@@ -31,18 +37,35 @@ func NewRouter(app *echo.Echo, useCases UseCase) error {
 					"",
 					http.MethodGet,
 					func(ctx echo.Context) error {
-						minTTL := time.Now()
-						maxTTL := minTTL.AddDate(1, 0, 0)
-						return ctx.Render(http.StatusOK, "index.html", map[string]interface{}{
-							"ttlMin": minTTL.Format("2006-01-02"),
-							"ttlMax": maxTTL.Format("2006-01-02"),
-						})
+						return ctx.Render(http.StatusOK, "index.html", nil)
 					},
 				),
 				routing.NewHTTPRouteHandler(
-					"/link",
+					"/",
 					http.MethodPost,
 					func(ctx echo.Context) error {
+						userRawURL := ctx.FormValue(formParamUserURL)
+						if userRawURL == "" {
+							return ctx.Render(http.StatusOK, "index.html", map[string]string{
+								onSaveError: "url is empty",
+							})
+						}
+						userURL, userParseError := url.ParseRequestURI(userRawURL)
+						if userParseError != nil {
+							return ctx.Render(http.StatusOK, "index.html", map[string]string{
+								"userRawURL": userRawURL,
+								onSaveError:  "url invalid",
+							})
+						}
+
+						urlEntity, urlEntitySaveError := useCases.SaveLink(context.Background(), userURL)
+						if urlEntitySaveError != nil {
+							return ctx.Render(http.StatusOK, "index.html", map[string]string{
+								onSaveError: urlEntitySaveError.Error(),
+							})
+						}
+						fmt.Println("urlEntity:", urlEntity)
+						//useCases.SaveLink()
 						//useCaseContext := context.Background()
 						//useCases.Redirect(useCaseContext, "asd")
 						return ctx.Redirect(http.StatusSeeOther, "/link/asDAW123")

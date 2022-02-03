@@ -5,8 +5,23 @@
 
 version: 2
 updates:
-  - package-ecosystem: "" # See documentation for possible values
-    directory: "/" # Location of package manifests
+  -
+    package-ecosystem: github-actions
+    directory: /
+    labels:
+      - dependencies
+      - actions
+      - "Skip Changelog"
+    schedule:
+      day: sunday
+      interval: weekly
+  -
+    package-ecosystem: gomod
+    directory: /
+    labels:
+      - dependencies
+      - go
+      - "Skip Changelog"
     schedule:
       interval: "daily"
  

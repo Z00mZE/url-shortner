@@ -74,7 +74,7 @@ func NewRouter(app *echo.Echo, useCases UseCase) error {
 							ctx.Logger().Error(urlEntityFindError)
 							return ctx.Redirect(http.StatusSeeOther, "/")
 						}
-
+						//	@todo: нужно переделать формирование `shortUrl`
 						return ctx.Render(
 							http.StatusOK,
 							"link.html",

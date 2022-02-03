@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"context"
-	"github.com/Z00mZE/url-shortner/ent"
+	"github.com/Z00mZE/url-shortner/ent/service"
 	"net/url"
 	"time"
 )
@@ -12,36 +12,39 @@ type converter interface {
 	Decode(string) int64
 }
 
-type Shortner struct {
-	userORMClient    *ent.UrlsClient
+type Shortener struct {
+	userORMClient    *service.ShortUrlClient
 	decimalConverter converter
 }
 
-func NewShortner(orm *ent.UrlsClient, converter converter) *Shortner {
-	return &Shortner{userORMClient: orm, decimalConverter: converter}
+func NewShortener(orm *service.ShortUrlClient, converter converter) *Shortener {
+	return &Shortener{userORMClient: orm, decimalConverter: converter}
 }
 
-func (s *Shortner) SaveLink(ctx context.Context, userURL *url.URL) (ent.Urls, error) {
-	//TODO implement me
-	//panic("implement me")
-	s.
+func (s *Shortener) SaveLink(ctx context.Context, userURL *url.URL) (*service.ShortUrl, error) {
+	entity, saveError := s.
 		userORMClient.
 		Create().
 		SetURL(userURL.String()).
 		SetExpiredAt(time.Now().AddDate(0, 1, 0)).
-	return ent.Urls{
-		ID:        0,
-		URL:       "",
-		ExpiredAt: time.Time{},
-	}, nil
+		Save(ctx)
+	if saveError != nil {
+		return nil, saveError
+	}
+	entity.HashID = s.decimalConverter.Encode(int64(entity.ID))
+	return entity, nil
 }
 
-func (s *Shortner) ViewLink(ctx context.Context, s2 string) (ent.Urls, error) {
-	//TODO implement me
-	panic("implement me")
-}
+func (s *Shortener) FindLink(ctx context.Context, idHash string) (*service.ShortUrl, error) {
+	shortUrlID := s.decimalConverter.Decode(idHash)
 
-func (s *Shortner) Redirect(ctx context.Context, s2 string) (ent.Urls, error) {
-	//TODO implement me
-	panic("implement me")
+	entity, findError := s.
+		userORMClient.
+		Get(ctx, int(shortUrlID))
+
+	if findError != nil {
+		return nil, findError
+	}
+	entity.HashID = idHash
+	return entity, nil
 }

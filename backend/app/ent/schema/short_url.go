@@ -7,17 +7,16 @@ import (
 	"time"
 )
 
-// Urls holds the schema definition for the Urls entity.
-type Urls struct {
+// ShortUrl holds the schema definition for the ShortUrl entity.
+type ShortUrl struct {
 	ent.Schema
 }
 
-// Fields of the Urls.
-func (Urls) Fields() []ent.Field {
+// Fields of the ShortUrl.
+func (ShortUrl) Fields() []ent.Field {
 	return []ent.Field{
 		field.
 			String("url").
-			Unique().
 			Validate(func(s string) error {
 				if _, err := url.ParseRequestURI(s); err != nil {
 					return err
@@ -35,7 +34,7 @@ func (Urls) Fields() []ent.Field {
 	}
 }
 
-// Edges of the Urls.
-func (Urls) Edges() []ent.Edge {
+// Edges of the ShortUrl.
+func (ShortUrl) Edges() []ent.Edge {
 	return nil
 }

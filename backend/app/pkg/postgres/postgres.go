@@ -2,12 +2,12 @@ package postgres
 
 import (
 	"context"
-	"github.com/Z00mZE/url-shortner/ent"
+	"github.com/Z00mZE/url-shortner/ent/service"
 )
 
 // NewEntPostgres -
-func NewEntPostgres(url string, opts ...ent.DBOption) (*ent.Client, error) {
-	orm, ormError := ent.Open(ent.PgPgx, url, nil, opts)
+func NewEntPostgres(url string, opts ...service.DBOption) (*service.Client, error) {
+	orm, ormError := service.Open(service.PgPgx, url, nil, opts)
 	if ormError != nil {
 		return nil, ormError
 	}

@@ -21,7 +21,6 @@ import (
 )
 
 func Run(cfg *config.AppConfig) {
-	fmt.Println("DSN: ", cfg.Database.DSN)
 	entOrm, entOrmError := postgres.NewEntPostgres(
 		cfg.Database.DSN,
 		postgres.MaxPoolSize(10),
@@ -44,8 +43,8 @@ func Run(cfg *config.AppConfig) {
 	)
 	app.Renderer = embedded.NewRenderer()
 	//	иницализация роутинга
-	shortner := usecase.NewShortner(entOrm.Urls, converter.NewDefaultDecimalConverter())
-	go initRoutes(app, shortner)
+	shorter := usecase.NewShortener(entOrm.ShortUrl, converter.NewDefaultDecimalConverter())
+	go initRoutes(app, shorter)
 
 	// Waiting signal
 	interrupt := make(chan os.Signal, 1)
@@ -68,7 +67,7 @@ func Run(cfg *config.AppConfig) {
 	}
 }
 
-func initRoutes(app *echo.Echo, shortner *usecase.Shortner) {
+func initRoutes(app *echo.Echo, shortner *usecase.Shortener) {
 	assetHandler, assetHandlerError := assets.NewAssetFileServer()
 	if assetHandlerError == nil {
 		app.GET("/assets/*", echo.WrapHandler(http.StripPrefix("/assets/", assetHandler)))
